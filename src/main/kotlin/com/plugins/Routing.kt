@@ -1,6 +1,7 @@
 package com.plugins
 
 import com.dto.Author
+import com.dto.Post
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -58,6 +59,49 @@ fun Application.configureRouting(){
                     return@delete
                 }
                 authorService.delete(id)
+                call.respond(HttpStatusCode.OK)
+            }
+
+        }
+
+        // Posts
+        route("/posts") {
+
+            post {
+                val post = call.receive<Post>()
+                val createdPost = postService.create(post)
+                call.respond(HttpStatusCode.Created, createdPost)
+            }
+            get("/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@get
+                }
+                val post = postService.read(id)
+                if (post != null) {
+                    call.respond(HttpStatusCode.OK, post)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+            put("/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@put
+                }
+                val post = call.receive<Post>()
+                postService.update(id, post)
+                call.respond(HttpStatusCode.OK)
+            }
+            delete("/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@delete
+                }
+                postService.delete(id)
                 call.respond(HttpStatusCode.OK)
             }
 
