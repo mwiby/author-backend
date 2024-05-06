@@ -14,7 +14,6 @@ data class Post(
     val authorId: Int,
     val title: String,
     val content: String,
-    val comments: List<Comment>? = null
 )
 
 @Serializable
