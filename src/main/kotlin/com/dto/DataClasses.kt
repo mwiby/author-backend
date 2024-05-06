@@ -22,3 +22,9 @@ data class Comment(
     val postId: Int,
     val content: String
 )
+
+@Serializable
+data class PostWithComments(
+    val post: Post,
+    val comments: List<Comment>
+)

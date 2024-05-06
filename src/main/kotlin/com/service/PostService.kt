@@ -1,5 +1,6 @@
 package com.service
 
+import com.dto.Comment
 import com.dto.Post
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
@@ -13,6 +14,8 @@ class PostService(private val connection: Connection) {
         private const val SELECT_POST_BY_ID = "SELECT * FROM posts WHERE id = ?"
         private const val UPDATE_POST = "UPDATE posts SET title = ?, content = ? WHERE id = ?"
         private const val DELETE_POST = "DELETE FROM posts WHERE id = ?"
+        private const val SELECT_COMMENTS_BY_POST_ID = "SELECT * FROM comments WHERE postId = ?"
+        private const val DELETE_COMMENTS_BY_POST_ID = "DELETE FROM comments WHERE postId = ?"
     }
 
     suspend fun create(post: Post): Post {
@@ -30,7 +33,14 @@ class PostService(private val connection: Connection) {
         }
     }
 
-     fun read(id: Int): Post? {
+     fun read(id: Int): Pair<Post?, List<Comment>> {
+         val post: Post? = readPostById(id)
+         val comments: List<Comment> = getCommentsByPostId(id)
+         return Pair(post, comments)
+
+    }
+
+    private fun readPostById(id: Int): Post? {
         val statement = connection.prepareStatement(SELECT_POST_BY_ID)
         statement.setInt(1, id)
         val resultSet = statement.executeQuery()
@@ -46,6 +56,24 @@ class PostService(private val connection: Connection) {
             null
         }
     }
+    private fun getCommentsByPostId(postId: Int): List<Comment> {
+        val comments = mutableListOf<Comment>()
+        val statement = connection.prepareStatement(SELECT_COMMENTS_BY_POST_ID)
+        statement.setInt(1, postId)
+        val resultSet = statement.executeQuery()
+
+        while (resultSet.next()) {
+            val comment = Comment(
+                id = resultSet.getInt("id"),
+                postId = resultSet.getInt("postId"),
+                content = resultSet.getString("content")
+            )
+            comments.add(comment)
+        }
+        return comments
+    }
+
+
 
     fun update(id: Int, post: Post) {
         val statement = connection.prepareStatement(UPDATE_POST)
@@ -56,8 +84,18 @@ class PostService(private val connection: Connection) {
     }
 
     fun delete(id: Int) {
+
+        // Delete associated comments first
+        deleteCommentsByPostId(id)
+
         val statement = connection.prepareStatement(DELETE_POST)
         statement.setInt(1, id)
+        statement.executeUpdate()
+    }
+
+    private fun deleteCommentsByPostId(postId: Int) {
+        val statement = connection.prepareStatement(DELETE_COMMENTS_BY_POST_ID)
+        statement.setInt(1, postId)
         statement.executeUpdate()
     }
 }

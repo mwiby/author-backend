@@ -2,6 +2,7 @@ package com.plugins
 
 import com.dto.Author
 import com.dto.Post
+import com.dto.PostWithComments
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -78,9 +79,14 @@ fun Application.configureRouting(){
                     call.respond(HttpStatusCode.BadRequest)
                     return@get
                 }
-                val post = postService.read(id)
+                val (post, comments) = postService.read(id) // Read both post and comments
                 if (post != null) {
-                    call.respond(HttpStatusCode.OK, post)
+                    val postWithComments: Any = if (comments.isNotEmpty()) {
+                        PostWithComments(post, comments)
+                    } else {
+                        post // Return post without comments
+                    }
+                    call.respond(HttpStatusCode.OK, postWithComments)
                 } else {
                     call.respond(HttpStatusCode.NotFound)
                 }
