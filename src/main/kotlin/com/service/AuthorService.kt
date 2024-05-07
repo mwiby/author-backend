@@ -17,6 +17,22 @@ class AuthorService(private val connection: Connection) {
         private const val DELETE_AUTHOR = "DELETE FROM authors WHERE id = ?"
     }
 
+    fun getAllAuthors(): List<Author> {
+        val authors = mutableListOf<Author>()
+        val statement = connection.createStatement()
+        val resultSet = statement.executeQuery("SELECT * FROM authors")
+
+        while (resultSet.next()) {
+            val author = Author(
+                id = resultSet.getInt("id"),
+                name = resultSet.getString("name")
+            )
+            authors.add(author)
+        }
+
+        return authors
+    }
+
      fun create(author: Author): Author {
         val statement = connection.prepareStatement(INSERT_AUTHOR, Statement.RETURN_GENERATED_KEYS)
         statement.setString(1, author.name)

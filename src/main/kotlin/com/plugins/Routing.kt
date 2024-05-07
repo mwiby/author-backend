@@ -31,6 +31,10 @@ fun Application.configureRouting(){
                 val createdAuthor = authorService.create(author)
                 call.respond(HttpStatusCode.Created, createdAuthor)
             }
+            get {
+                val authors = authorService.getAllAuthors()
+                call.respond(HttpStatusCode.OK, authors)
+            }
             get("/{id}") {
                 val id = call.parameters["id"]?.toIntOrNull()
                 if (id == null) {
