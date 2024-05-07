@@ -1,6 +1,7 @@
 package com.plugins
 
 import com.dto.Author
+import com.dto.Comment
 import com.dto.Post
 import com.dto.PostWithComments
 import io.ktor.http.*
@@ -112,6 +113,39 @@ fun Application.configureRouting(){
             }
 
         }
+
+        //Comment
+        route("/comments") {
+
+            post {
+                val comment = call.receive<Comment>()
+                val createdComment = commentService.create(comment)
+                call.respond(HttpStatusCode.Created, createdComment)
+            }
+
+            put("/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@put
+                }
+                val comment = call.receive<Comment>()
+                commentService.update(id, comment)
+                call.respond(HttpStatusCode.OK)
+            }
+
+            delete("/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@delete
+                }
+                commentService.delete(id)
+                call.respond(HttpStatusCode.OK)
+            }
+
+        }
+
     }
     environment.monitor.subscribe(ApplicationStopPreparing) {
         dbConnection.close()
